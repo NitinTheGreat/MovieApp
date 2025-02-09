@@ -17,14 +17,17 @@ export default async function MoviePage({ params }: { params: { id: string } }) 
   const movie = await getMovie(params.id)
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+    <main className="min-h-screen bg-gray-100 dark:bg-gray-900 p-4">
       <div className="max-w-4xl mx-auto">
-        <Link href="/" className="inline-flex items-center text-purple-500 hover:text-purple-600 mb-8">
+        <Link
+          href="/"
+          className="inline-flex items-center text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 mb-8"
+        >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to search
         </Link>
 
-        <div className="grid md:grid-cols-[300px_1fr] gap-8">
+        <div className="grid md:grid-cols-[300px_1fr] gap-8 bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
           <div className="relative aspect-[2/3] rounded-xl overflow-hidden">
             {movie.Poster !== "N/A" ? (
               <Image

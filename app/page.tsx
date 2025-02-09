@@ -14,6 +14,8 @@ export default function Home() {
   const [hasMore, setHasMore] = useState(true)
   const [darkMode, setDarkMode] = useState(true)
   const [popularMovies, setPopularMovies] = useState<any[]>([])
+  const [favorites, setFavorites] = useState<any[]>([])
+  const [showAllFavorites, setShowAllFavorites] = useState(false)
   const observer = useRef<IntersectionObserver>(null)
 
   const toggleTheme = () => {
@@ -26,13 +28,12 @@ export default function Home() {
   }
 
   const toggleFavorite = (movie: any) => {
-    const favorites = JSON.parse(localStorage.getItem("favorites") || "[]")
     const isFavorite = favorites.some((fav: any) => fav.imdbID === movie.imdbID)
-
     const newFavorites = isFavorite
       ? favorites.filter((fav: any) => fav.imdbID !== movie.imdbID)
       : [...favorites, movie]
 
+    setFavorites(newFavorites)
     localStorage.setItem("favorites", JSON.stringify(newFavorites))
     setMovies((prev) => [...prev]) // Force re-render
   }
@@ -125,6 +126,11 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
+    const storedFavorites = JSON.parse(localStorage.getItem("favorites") || "[]")
+    setFavorites(storedFavorites)
+  }, [])
+
+  useEffect(() => {
     const timer = setTimeout(() => {
       if (query.length >= 3) {
         searchMovies(true)
@@ -133,6 +139,10 @@ export default function Home() {
 
     return () => clearTimeout(timer)
   }, [query, searchMovies])
+
+  const handleSeeMoreClick = () => {
+    setShowAllFavorites(true)
+  }
 
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900 px-4 py-8">
@@ -147,7 +157,6 @@ export default function Home() {
             {darkMode ? <Sun className="w-6 h-6 text-yellow-500" /> : <Moon className="w-6 h-6 text-gray-700" />}
           </button>
         </div>
-
         <form className="relative w-full max-w-2xl mx-auto">
           <input
             type="search"
@@ -157,6 +166,67 @@ export default function Home() {
             className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
         </form>
+
+        {favorites.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white font-serif mb-4">Your Favorites</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {(showAllFavorites ? favorites : favorites.slice(0, 6)).map((movie) => (
+                <div
+                  key={movie.imdbID}
+                  className="relative group overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-lg transition-transform hover:scale-105"
+                >
+                  <a href={`/movie/${movie.imdbID}`}>
+                    <div className="relative aspect-[2/3] overflow-hidden">
+                      {movie.Poster !== "N/A" ? (
+                        <Image
+                          src={movie.Poster || "/placeholder.svg"}
+                          alt={movie.Title}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700">
+                          <span className="text-gray-400">No Poster</span>
+                        </div>
+                      )}
+                    </div>
+                  </a>
+                  <div className="p-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-semibold text-lg text-gray-900 dark:text-white line-clamp-2 font-serif">
+                          {movie.Title}
+                        </h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{movie.Year}</p>
+                      </div>
+                      <button
+                        onClick={() => toggleFavorite(movie)}
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                        aria-label="Remove from favorites"
+                      >
+                        <Heart className="w-5 h-5 fill-red-500 text-red-500" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {favorites.length > 6 && !showAllFavorites && (
+              <div className="mt-4 text-center">
+                <button
+                  onClick={handleSeeMoreClick}
+                  className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors"
+                >
+                  See More
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+       
 
         {error && <div className="text-center text-red-500 dark:text-red-400">{error}</div>}
 
@@ -236,72 +306,4 @@ export default function Home() {
     </main>
   )
 }
-
-// /** @type {import('tailwindcss').Config} */
-// module.exports = {
-//   darkMode: ["class"],
-//   content: ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}", "./app/**/*.{js,ts,jsx,tsx,mdx}", "*.{js,ts,jsx,tsx,mdx}"],
-//   theme: {
-//     extend: {
-//       fontFamily: {
-//         sans: ["var(--font-bricolage)"],
-//         serif: ["var(--font-playfair)"],
-//       },
-//       colors: {
-//         border: "hsl(var(--border))",
-//         input: "hsl(var(--input))",
-//         ring: "hsl(var(--ring))",
-//         background: "hsl(var(--background))",
-//         foreground: "hsl(var(--foreground))",
-//         primary: {
-//           DEFAULT: "hsl(var(--primary))",
-//           foreground: "hsl(var(--primary-foreground))",
-//         },
-//         secondary: {
-//           DEFAULT: "hsl(var(--secondary))",
-//           foreground: "hsl(var(--secondary-foreground))",
-//         },
-//         destructive: {
-//           DEFAULT: "hsl(var(--destructive))",
-//           foreground: "hsl(var(--destructive-foreground))",
-//         },
-//         muted: {
-//           DEFAULT: "hsl(var(--muted))",
-//           foreground: "hsl(var(--muted-foreground))",
-//         },
-//         accent: {
-//           DEFAULT: "hsl(var(--accent))",
-//           foreground: "hsl(var(--accent-foreground))",
-//         },
-//         popover: {
-//           DEFAULT: "hsl(var(--popover))",
-//           foreground: "hsl(var(--popover-foreground))",
-//         },
-//         card: {
-//           DEFAULT: "hsl(var(--card))",
-//           foreground: "hsl(var(--card-foreground))",
-//         },
-//         purple: {
-//           50: "#faf5ff",
-//           100: "#f3e8ff",
-//           200: "#e9d5ff",
-//           300: "#d8b4fe",
-//           400: "#c084fc",
-//           500: "#a855f7",
-//           600: "#9333ea",
-//           700: "#7e22ce",
-//           800: "#6b21a8",
-//           900: "#581c87",
-//           950: "#3b0764",
-//         },
-//       },
-//       borderRadius: {
-//         lg: "var(--radius)",
-//         md: "calc(var(--radius) - 2px)",
-//         sm: "calc(var(--radius) - 4px)",
-//       },
-//     },
-//   },
-//   plugins: [require("@tailwindcss/line-clamp"), require("tailwindcss-animate")],
-// }
 
